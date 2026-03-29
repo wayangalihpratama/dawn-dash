@@ -41,6 +41,18 @@ async def trigger_bsjp_scan(scanner, notifier):
         await notifier.send_bsjp_signal(signal)
 
 
+async def trigger_market_update(notifier, session_title):
+    """Execution logic for scheduled market updates."""
+    logger.info(f"Triggering Market Update: {session_title}")
+    
+    # Use mock data to simulate market movers (Top 5)
+    all_data = get_mock_stock_data()
+    sorted_data = sorted(all_data, key=lambda x: x["price_change_pct"], reverse=True)
+    top_movers = sorted_data[:5]
+    
+    await notifier.send_market_update(session_title, top_movers)
+
+
 async def main():
     logger.info("Dawn Dash Bot Starting (Integrated)...")
 
@@ -65,7 +77,21 @@ async def main():
         lambda: wrap_async(trigger_bsjp_scan, scanner, notifier)
     )
 
-    # 3. Start Scheduler
+    # 3. Add Market Status Jobs (Morning, Afternoon, Evening)
+    scheduler.add_market_status_job(
+        lambda: wrap_async(trigger_market_update, notifier, "Pagi"), 
+        hour=9, minute=0, session_name="Morning"
+    )
+    scheduler.add_market_status_job(
+        lambda: wrap_async(trigger_market_update, notifier, "Siang"), 
+        hour=12, minute=0, session_name="Afternoon"
+    )
+    scheduler.add_market_status_job(
+        lambda: wrap_async(trigger_market_update, notifier, "Sore"), 
+        hour=15, minute=50, session_name="Evening"
+    )
+
+    # 4. Start Scheduler
     scheduler.start()
 
     # 4. Final Notification

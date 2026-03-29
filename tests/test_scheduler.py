@@ -11,15 +11,19 @@ def test_scheduler_add_jobs():
     scheduler.add_signal_job(dummy, hour=15, minute=50)
     scheduler.add_journal_job(dummy, hour=17, minute=0)
     scheduler.add_exit_job(dummy, hour=9, minute=0)
+    scheduler.add_market_status_job(dummy, 9, 0, "Morning")
+    scheduler.add_market_status_job(dummy, 12, 0, "Afternoon")
+    scheduler.add_market_status_job(dummy, 15, 50, "Evening")
 
     # Check jobs
     jobs = scheduler.scheduler.get_jobs()
-    assert len(jobs) == 3
+    assert len(jobs) == 6
 
     job_names = [j.name for j in jobs]
     assert "BSJP_Signal_Scan" in job_names
-    assert "Daily_Journal" in job_names
-    assert "Automated_Exit" in job_names
+    assert "PriceCheck_Morning" in job_names
+    assert "PriceCheck_Afternoon" in job_names
+    assert "PriceCheck_Evening" in job_names
 
 
 def test_scheduler_timezone():

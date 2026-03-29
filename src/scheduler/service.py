@@ -16,7 +16,8 @@ class MarketScheduler:
         trigger = CronTrigger(hour=hour, minute=minute, timezone=self.tz)
         self.scheduler.add_job(func, trigger, name="BSJP_Signal_Scan")
         logger.info(
-            f"Scheduled 'BSJP Signal Scan' at {hour:02d}:{minute:02d} {self.tz}"
+            f"Scheduled 'BSJP Signal Scan' at {hour:02d}:{minute:02d} "
+            f"timezone: {self.tz}"
         )
 
     def add_journal_job(self, func, hour=17, minute=00):
@@ -33,6 +34,16 @@ class MarketScheduler:
         self.scheduler.add_job(func, trigger, name="Automated_Exit")
         logger.info(
             f"Scheduled 'Automated Exit' at {hour:02d}:{minute:02d} {self.tz}"
+        )
+
+    def add_market_status_job(self, func, hour, minute, session_name):
+        """Adds a generic market status/price check job."""
+        trigger = CronTrigger(hour=hour, minute=minute, timezone=self.tz)
+        job_name = f"PriceCheck_{session_name}"
+        self.scheduler.add_job(func, trigger, name=job_name)
+        logger.info(
+            f"Scheduled 'Price Check: {session_name}' at "
+            f"{hour:02d}:{minute:02d} {self.tz}"
         )
 
     def start(self):

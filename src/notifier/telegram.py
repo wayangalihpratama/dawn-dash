@@ -52,7 +52,30 @@ class TelegramNotifier:
         """Sends a generic status report or journal to Telegram."""
         try:
             await self.bot.send_message(
-                chat_id=self.chat_id, text=text, parse_mode=ParseMode.HTML
+                chat_id=self.chat_id,
+                text=text,
+                parse_mode=ParseMode.HTML,
             )
         except Exception as e:
             logger.error(f"Failed to send status report: {e}")
+
+    async def send_market_update(self, session_title, stocks):
+        """Sends a market overview with top gainers/losers."""
+        message = f"<b>📊 Market Update: {session_title}</b>\n\n"
+
+        for stock in stocks:
+            symbol = stock.get("symbol")
+            change = stock.get("price_change_pct")
+            emoji = "🟢" if change >= 0 else "🔴"
+            message += f"{emoji} <b>{symbol}</b>: {change:+.2f}%\n"
+
+        message += "\n<i>Keep moving with Dawn Dash.</i>"
+
+        try:
+            await self.bot.send_message(
+                chat_id=self.chat_id,
+                text=message,
+                parse_mode=ParseMode.HTML,
+            )
+        except Exception as e:
+            logger.error(f"Failed to send market update: {e}")
