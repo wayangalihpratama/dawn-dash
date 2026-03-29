@@ -1,3 +1,4 @@
+import pytz
 from src.scheduler.service import MarketScheduler
 
 

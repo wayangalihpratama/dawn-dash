@@ -69,27 +69,30 @@ async def main():
     notifier = TelegramNotifier(TELEGRAM_BOT_TOKEN, CHAT_ID)
     scheduler = MarketScheduler()
 
-    # 2. Add Market Jobs (AsyncIOScheduler supports direct coroutines)
-    scheduler.add_signal_job(lambda: trigger_bsjp_scan(scanner, notifier))
+    # 2. Add Market Jobs (Passing Functions Directly - No Lambdas)
+    scheduler.add_signal_job(trigger_bsjp_scan, args=(scanner, notifier))
 
     # 3. Add Market Status Jobs (Morning, Afternoon, Evening)
     scheduler.add_market_status_job(
-        lambda: trigger_market_update(notifier, "Pagi"),
+        trigger_market_update,
         hour=9,
         minute=0,
         session_name="Morning",
+        args=(notifier, "Pagi"),
     )
     scheduler.add_market_status_job(
-        lambda: trigger_market_update(notifier, "Siang"),
+        trigger_market_update,
         hour=12,
         minute=0,
         session_name="Afternoon",
+        args=(notifier, "Siang"),
     )
     scheduler.add_market_status_job(
-        lambda: trigger_market_update(notifier, "Sore"),
+        trigger_market_update,
         hour=15,
         minute=50,
         session_name="Evening",
+        args=(notifier, "Sore"),
     )
 
     # 4. Start Scheduler
