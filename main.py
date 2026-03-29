@@ -69,31 +69,24 @@ async def main():
     notifier = TelegramNotifier(TELEGRAM_BOT_TOKEN, CHAT_ID)
     scheduler = MarketScheduler()
 
-    # 2. Add Market Jobs (Aligned with WIB)
-    # We use a lambda or wrapper to ensure async functions are called correctly
-    def wrap_async(func, *args):
-        loop = asyncio.get_event_loop()
-        loop.create_task(func(*args))
-
-    scheduler.add_signal_job(
-        lambda: wrap_async(trigger_bsjp_scan, scanner, notifier)
-    )
+    # 2. Add Market Jobs (AsyncIOScheduler supports direct coroutines)
+    scheduler.add_signal_job(lambda: trigger_bsjp_scan(scanner, notifier))
 
     # 3. Add Market Status Jobs (Morning, Afternoon, Evening)
     scheduler.add_market_status_job(
-        lambda: wrap_async(trigger_market_update, notifier, "Pagi"),
+        lambda: trigger_market_update(notifier, "Pagi"),
         hour=9,
         minute=0,
         session_name="Morning",
     )
     scheduler.add_market_status_job(
-        lambda: wrap_async(trigger_market_update, notifier, "Siang"),
+        lambda: trigger_market_update(notifier, "Siang"),
         hour=12,
         minute=0,
         session_name="Afternoon",
     )
     scheduler.add_market_status_job(
-        lambda: wrap_async(trigger_market_update, notifier, "Sore"),
+        lambda: trigger_market_update(notifier, "Sore"),
         hour=15,
         minute=50,
         session_name="Evening",
@@ -102,7 +95,7 @@ async def main():
     # 4. Start Scheduler
     scheduler.start()
 
-    # 4. Final Notification
+    # 5. Final Notification
     logger.info(
         "Bot is active and listening for market events. Press Ctrl+C to stop."
     )
@@ -111,7 +104,11 @@ async def main():
         "Market Scheduler is active for WIB hours."
     )
 
-    # 5. Continuous Execution Loop
+    # 6. Manual Smoke Test (Requested by user for Jam 12 WIB verification)
+    logger.info("Running manual smoke test for Jam 12 WIB update...")
+    await trigger_market_update(notifier, "Siang (Smoke Test)")
+
+    # 7. Continuous Execution Loop
     try:
         while True:
             await asyncio.sleep(60)

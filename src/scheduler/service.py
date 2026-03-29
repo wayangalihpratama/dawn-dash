@@ -1,6 +1,6 @@
 import logging
 import pytz
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 logger = logging.getLogger(__name__)
@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class MarketScheduler:
     def __init__(self, timezone="Asia/Jakarta"):
         self.tz = pytz.timezone(timezone)
-        self.scheduler = BackgroundScheduler(timezone=self.tz)
+        self.scheduler = AsyncIOScheduler(timezone=self.tz)
 
     def add_signal_job(self, func, hour=15, minute=50):
         """Adds a job to scan for BSJP signals."""
@@ -50,7 +50,7 @@ class MarketScheduler:
         """Starts the background scheduler."""
         if not self.scheduler.running:
             self.scheduler.start()
-            logger.info("Market Scheduler Started.")
+            logger.info("Market Scheduler (AsyncIO) Started.")
 
     def shutdown(self):
         """Shuts down the scheduler."""
