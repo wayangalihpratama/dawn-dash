@@ -68,11 +68,16 @@ async def main():
     # 3. Start Scheduler
     scheduler.start()
 
+    # 4. Final Notification
     logger.info(
         "Bot is active and listening for market events. Press Ctrl+C to stop."
     )
+    await notifier.send_status_report(
+        "🚀 <b>Dawn Dash Bot Started!</b>\n"
+        "Market Scheduler is active for WIB hours."
+    )
 
-    # 4. Continuous Execution Loop
+    # 5. Continuous Execution Loop
     try:
         while True:
             await asyncio.sleep(60)
