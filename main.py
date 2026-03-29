@@ -107,9 +107,11 @@ async def main():
         "Market Scheduler is active for WIB hours."
     )
 
-    # 6. Manual Smoke Test (Requested by user for Jam 12 WIB verification)
-    logger.info("Running manual smoke test for Jam 12 WIB update...")
+    # 6. Manual Smoke Test (Full Session Verification)
+    logger.info("Running manual smoke tests for all sessions...")
+    await trigger_market_update(notifier, "Pagi (Smoke Test)")
     await trigger_market_update(notifier, "Siang (Smoke Test)")
+    await trigger_market_update(notifier, "Sore (Smoke Test)")
 
     # 7. Continuous Execution Loop
     try:
