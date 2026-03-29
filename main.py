@@ -2,51 +2,83 @@ import os
 import logging
 import asyncio
 from dotenv import load_dotenv
-from telegram import Bot
-from telegram.error import TelegramError
+
+from src.engine.signal_filter import SignalScanner
+from src.scheduler.service import MarketScheduler
+from src.notifier.telegram import TelegramNotifier
+from src.utils.mock_data import get_mock_stock_data
 
 # --- Configuration ---
 load_dotenv()
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
+
 # --- Logging ---
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO
+    level=logging.INFO,
 )
 logger = logging.getLogger(__name__)
 
 
-async def verify_connection():
-    """Verify that the bot token is valid and can send messages."""
-    if not TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_TOKEN == "YOUR_BOT_TOKEN_HERE":
-        logger.warning("TELEGRAM_BOT_TOKEN is not set or using placeholder.")
-        return False
+async def trigger_bsjp_scan(scanner, notifier):
+    """Execution logic for the 15:50 WIB BSJP scan."""
+    logger.info("Triggered BSJP Signal Scan...")
 
-    try:
-        bot = Bot(token=TELEGRAM_BOT_TOKEN)
-        bot_info = await bot.get_me()
-        logger.info(f"Bot '@{bot_info.username}' is connected and authorized.")
-        return True
-    except TelegramError as e:
-        logger.error(f"Failed to connect to Telegram: {e}")
-        return False
+    # In a real scenario, this would fetch from an API.
+    # For MVP, we use mock data.
+    data = get_mock_stock_data()
+
+    signals = scanner.filter_bsjp(data)
+
+    if not signals:
+        logger.info("Scan completed. No BSJP candidates found today.")
+        return
+
+    logger.info(f"Scan completed. Found {len(signals)} candidates.")
+    for signal in signals:
+        await notifier.send_bsjp_signal(signal)
 
 
 async def main():
-    logger.info("Dawn Dash Bot Starting...")
+    logger.info("Dawn Dash Bot Starting (Integrated)...")
 
-    # Verify environment
-    is_authorized = await verify_connection()
-    if not is_authorized:
-        logger.warning("Running in limited mode. Please check your .env file.")
+    if not TELEGRAM_BOT_TOKEN or not CHAT_ID:
+        logger.error(
+            "TELEGRAM_BOT_TOKEN or CHAT_ID not set. Please check .env."
+        )
+        return
 
-    logger.info("Heartbeat: Bot is alive. Use 'docker compose down' to stop.")
+    # 1. Initialize Components
+    scanner = SignalScanner()
+    notifier = TelegramNotifier(TELEGRAM_BOT_TOKEN, CHAT_ID)
+    scheduler = MarketScheduler()
 
-    # Stay alive loop
-    while True:
-        await asyncio.sleep(60)
+    # 2. Add Market Jobs (Aligned with WIB)
+    # We use a lambda or wrapper to ensure async functions are called correctly
+    def wrap_async(func, *args):
+        loop = asyncio.get_event_loop()
+        loop.create_task(func(*args))
+
+    scheduler.add_signal_job(
+        lambda: wrap_async(trigger_bsjp_scan, scanner, notifier)
+    )
+
+    # 3. Start Scheduler
+    scheduler.start()
+
+    logger.info(
+        "Bot is active and listening for market events. Press Ctrl+C to stop."
+    )
+
+    # 4. Continuous Execution Loop
+    try:
+        while True:
+            await asyncio.sleep(60)
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("Bot shutting down...")
+        scheduler.shutdown()
 
 
 if __name__ == "__main__":

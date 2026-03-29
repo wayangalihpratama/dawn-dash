@@ -1,32 +1,33 @@
 # Dawn Dash (Hybrid-Automation Edition)
 
-A "Semi-Auto" trading assistant for the Indonesia Stock Exchange (IDX) focusing on the BSJP (Beli Sore Jual Pagi) strategy.
+A "Semi-Auto" trading assistant for the Indonesia Stock Exchange (IDX) focusing on the **BSJP (Beli Sore Jual Pagi)** strategy.
 
-## 🚀 Quick Start
+## 🚀 Key Features
 
-### 1. Initial Setup
-Configure your environment by copying the example file:
+- **BSJP Signal Engine**: Curated signals based on Volume (1.5x Avg) and Price Change (>2%).
+- **WIB Market Scheduler**: Aligned with Indonesia Market Hours (15:50 WIB Signal).
+- **One-Click Execution**: Inline Telegram buttons with Stockbit Universal Links.
+- **Dockerized Workflow**: Portable and easy to deploy.
+
+## 📦 Startup & Commands
+
+### 1. Configure Environment
 ```bash
 cp .env.example .env
 ```
 Edit `.env` and provide your `TELEGRAM_BOT_TOKEN` and `CHAT_ID`.
 
-### 2. Execution Commands
-All commands use the standardized `./dc.sh` Docker wrapper:
-
+### 2. Run with Docker
+All commands use the `./dc.sh` wrapper:
 - **Startup**: `./dc.sh up -d`
-- **Rebuild**: `./dc.sh up -d --build`
 - **Logs**: `./dc.sh logs -f`
-- **Shutdown**: `./dc.sh down`
-- **Run Tests**: `./dc.sh run --rm bot python -m pytest tests/`
+- **Rebuild**: `./dc.sh up -d --build`
+- **Testing**: `./dc.sh run --rm bot python -m pytest tests/`
 
----
-
-## 🛠️ Project Structure
-- `src/`: Core Python source code.
-- `docs/`: Shared documentation (LLD, Feature Specs).
-- `agent_docs/`: Internal sprint artifacts and user stories.
-- `tests/`: Automated test suites.
+## 🛠️ Architecture
+- **Engine**: BSJP Scanner logic (`src/engine`).
+- **Scheduler**: WIB-aware market clock (`src/scheduler`).
+- **Notifier**: Telegram integration with HTML formatting (`src/notifier`).
 
 ## ⚖️ License
 MIT

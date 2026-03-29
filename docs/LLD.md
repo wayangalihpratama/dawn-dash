@@ -12,26 +12,28 @@ Dawn Dash is a Python-based utility container designed to bridge Stockbit screen
 ## 3. Module Decomposition
 
 ### 3.1. Scheduler Module
-- Responsible for triggering signal checks based on BEI Market Hours:
+- Uses `apscheduler` with `Asia/Jakarta` (WIB) timezone.
+- Triggers:
     - 15:50 WIB: BSJP Screening (Buy)
     - 17:00 WIB: Daily Journal Generation
     - 09:00 WIB: Profit/Loss Notification
 
 ### 3.2. Signal Engine
-- Filters stock data (simulated/manual/API).
-- Criteria: `Volume > 1.5x Avg`, `Price > +2%`, `Index in KOMPAS100`.
+- Filters stock data using `SignalScanner`.
+- Logic: `Volume > 1.5x Avg`, `Price > +2%`, `Index in KOMPAS100`.
+- Data Source: `src/utils/mock_data.py` (simulated for MVP).
 
 ### 3.3. Notification Module (Telegram)
-- Formats and sends messages with inline action buttons.
-- **Deep-Link Strategy**: Uses Universal Links (`https://stockbit.com/symbol/[TICKER]`) to ensure the mobile app opens directly via OS-level redirection.
-- Handles incoming commands: `/start`, `/ping`, `/status`.
+- Formats signals with HTML and Inline Buttons.
+- Uses Stockbit Universal Links: `https://stockbit.com/symbol/[TICKER]`
+- Handles bot authorization and message delivery.
 
 ---
 
 ## 4. Environment & Security
 - **Config**: `.env` file (never committed).
 - **Secrets**: `TELEGRAM_BOT_TOKEN`, `CHAT_ID`.
-- **Docker Strategy**: 
+- **Docker Strategy**:
     - Multi-stage build for a slim production image.
     - Volume mount for local development.
 
@@ -45,7 +47,7 @@ Dawn Dash is a Python-based utility container designed to bridge Stockbit screen
 ---
 
 ## 6. Development Workflow
-- **Linting**: Black/Flake8. 
+- **Linting**: Black/Flake8.
 - **Testing**: Pytest for signal logic.
 - **Commands**:
     - **Startup**: `./dc.sh up -d` (Runs in background)
