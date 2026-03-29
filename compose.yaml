@@ -1,0 +1,13 @@
+services:
+  bot:
+    build: .
+    image: dawn-dash-bot:latest
+    container_name: dawn_dash_bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
