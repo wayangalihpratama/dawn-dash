@@ -4,10 +4,11 @@ A "Semi-Auto" trading assistant for the Indonesia Stock Exchange (IDX) focusing 
 
 ## 🚀 Key Features
 
+- **Real-Time Data**: Integrated with Goapi.io for live Stockbit/IDX and Pegadaian Gold prices.
 - **BSJP Signal Engine**: Curated signals based on Volume (1.5x Avg) and Price Change (>2%).
 - **WIB Market Scheduler**: Aligned with Indonesia Market Hours (15:50 WIB Signal).
 - **One-Click Execution**: Inline Telegram buttons with Stockbit Universal Links.
-- **Dockerized Workflow**: Portable and easy to deploy.
+- **Gold Dip Monitoring**: Automated alerts for Pegadaian "Buy the Dip" opportunities.
 
 ## 📦 Startup & Commands
 
@@ -15,7 +16,7 @@ A "Semi-Auto" trading assistant for the Indonesia Stock Exchange (IDX) focusing 
 ```bash
 cp .env.example .env
 ```
-Edit `.env` and provide your `TELEGRAM_BOT_TOKEN`, `CHAT_ID`, and `METALPRICE_API_KEY`.
+Edit `.env` and provide your `TELEGRAM_BOT_TOKEN`, `CHAT_ID`, and `GOAPI_KEY`.
 
 ### 2. Run with Docker
 All commands use the `./dc.sh` wrapper:
@@ -25,12 +26,13 @@ All commands use the `./dc.sh` wrapper:
 - **Testing**: `./dc.sh run --rm bot python -m pytest tests/`
 
 ### Phase 1: Infrastructure
-- [x] Implement `GoldAPI` utility for MetalpriceAPI.
+- [x] Implement `GoldAPI` utility for Pegadaian (Goapi.io).
+- [x] Implement `StockAPI` for real-time IDX signals.
 - [x] Setup persistence storage for historical prices.
 
 ### Phase 2: Logic & Notification
 - [x] Implement "Dip Detection" algorithm.
-- [x] Add HTML-formatted Telegram messages for gold updates.
+- [x] Integrate real market movers into Daily Journals.
 
 ## 🛠️ Architecture
 - **Engine**: BSJP Scanner logic (`src/engine`).

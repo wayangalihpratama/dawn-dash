@@ -39,7 +39,7 @@ graph TD
 ```
 
 ### Components
-- **Bot Engine (Python)**: Handles scheduling, Stockbit data processing (simulated/API if available), and Telegram message delivery.
+- **Bot Engine (Python)**: Handles scheduling, Stockbit/IDX data processing via Goapi.io, and Telegram message delivery.
 - **Telegram Interface**: Command and Alert hub.
 - **Implementation Strategy**: Dockerized Python script using `python-telegram-bot` and a scheduler.
 
@@ -53,7 +53,7 @@ graph TD
 - [ ] Document Stockbit Screener configuration.
 
 ### Phase 2: Signal Generation (Mary)
-- [ ] Define the exact Stockbit Screener rules in the bot.
+- [x] Define exact Stockbit Screener logic in `StockAPI` utility.
 - [ ] Format the "Buy" message with stock data and technical indicators.
 
 ### Phase 3: One-Click Execution (Winston)
@@ -72,5 +72,4 @@ graph TD
 
 ## 🔮 Future Enhancements
 - Support for multiple brokerage links (not just Stockbit/Bibit).
-- Direct API integration for full automation (if regulation/access permits).
-- Portfolio performance tracking history.
+- Integration with Portfolio tracking to log buy price automatically.

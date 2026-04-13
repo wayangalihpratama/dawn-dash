@@ -28,9 +28,8 @@ Help users optimize their monthly gold investment by identifying "Buy the Dip" o
 ### Data Flow / Logic Flow
 ```mermaid
 graph TD
-    A[Scheduler: 08:30 WIB] --> B[Gold Utility: Fetch XAU/USD]
-    B --> C[Currency Utility: Fetch USD/IDR]
-    C --> D[Gold Engine: Calculate Price/Gram]
+    A[Scheduler: 08:30 WIB] --> B[Gold Utility: Fetch Pegadaian Price]
+    B --> D[Gold Engine: Process Price/Gram]
     D --> E{Is Detection Window?}
     E -->|No| F[Send Daily Summary]
     E -->|Yes| G{Is Dip Detected?}
@@ -56,7 +55,7 @@ graph TD
 ## 🔧 Implementation Details
 
 ### Phase 1: Infrastructure
-- [ ] Implement `GoldAPI` utility for MetalpriceAPI.
+- [x] Implement `GoldAPI` utility for Pegadaian (Goapi.io/Scraper).
 - [ ] Setup persistence storage for historical prices.
 
 ### Phase 2: Logic & Notification
@@ -67,9 +66,9 @@ graph TD
 
 ## 📡 API Reference
 
-### MetalpriceAPI (External)
-- **Endpoint**: `https://api.metalpriceapi.com/v1/latest`
-- **Params**: `base=USD`, `symbols=XAU,IDR`
+### Pegadaian (Goapi.io)
+- **Endpoint**: `https://api.goapi.io/v1/gold/pegadaian`
+- **Params**: `api_key=GOAPI_KEY`
 
 ---
 
