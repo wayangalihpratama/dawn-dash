@@ -15,7 +15,7 @@ A "Semi-Auto" trading assistant for the Indonesia Stock Exchange (IDX) focusing 
 ```bash
 cp .env.example .env
 ```
-Edit `.env` and provide your `TELEGRAM_BOT_TOKEN` and `CHAT_ID`.
+Edit `.env` and provide your `TELEGRAM_BOT_TOKEN`, `CHAT_ID`, and `METALPRICE_API_KEY`.
 
 ### 2. Run with Docker
 All commands use the `./dc.sh` wrapper:
@@ -23,6 +23,14 @@ All commands use the `./dc.sh` wrapper:
 - **Logs**: `./dc.sh logs -f`
 - **Rebuild**: `./dc.sh up -d --build`
 - **Testing**: `./dc.sh run --rm bot python -m pytest tests/`
+
+### Phase 1: Infrastructure
+- [x] Implement `GoldAPI` utility for MetalpriceAPI.
+- [x] Setup persistence storage for historical prices.
+
+### Phase 2: Logic & Notification
+- [x] Implement "Dip Detection" algorithm.
+- [x] Add HTML-formatted Telegram messages for gold updates.
 
 ## 🛠️ Architecture
 - **Engine**: BSJP Scanner logic (`src/engine`).

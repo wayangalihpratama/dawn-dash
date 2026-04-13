@@ -8,6 +8,7 @@ Dawn Dash is a Python-based utility container designed to bridge Stockbit screen
 - **Containerization**: Docker + Docker Compose
 - **Platform**: Telegram (API via `python-telegram-bot`)
 - **Execution Architecture**: Singleton worker service.
+- **External Dependencies**: MetalpriceAPI (Commodity Prices).
 
 ## 3. Module Decomposition
 
@@ -27,6 +28,11 @@ Dawn Dash is a Python-based utility container designed to bridge Stockbit screen
 - Formats signals with HTML and Inline Buttons.
 - Uses Stockbit Universal Links: `https://stockbit.com/symbol/[TICKER]`
 - Handles bot authorization and message delivery.
+
+### 3.4. Gold Price Module
+- **Engine**: `GoldMonitor` tracks price history and identifies "Buy the Dip" opportunities.
+- **API Wrapper**: Fetches XAU/IDR data and performs unit conversion (Troy Oz to Gram).
+- **Persistence**: Daily prices stored in `data/gold_history.json`.
 
 ---
 
