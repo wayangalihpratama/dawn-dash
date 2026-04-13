@@ -7,6 +7,9 @@ from src.engine.signal_filter import SignalScanner
 from src.scheduler.service import MarketScheduler
 from src.notifier.telegram import TelegramNotifier
 from src.utils.mock_data import get_mock_stock_data
+from src.utils.gold_api import GoldAPI
+from src.utils.gold_storage import GoldStorage
+from src.engine.gold_monitor import GoldMonitor
 
 # --- Configuration ---
 load_dotenv()
@@ -53,6 +56,47 @@ async def trigger_market_update(notifier, session_title):
     top_movers = sorted_data[:5]
 
     await notifier.send_market_update(session_title, top_movers)
+
+
+async def trigger_gold_check(
+    api, storage, monitor, notifier, current_date=None
+):
+    """Logic for daily gold price monitoring and dip alerts."""
+    if current_date is None:
+        current_date = datetime.now()
+
+    logger.info("Triggering Gold Price Check...")
+
+    try:
+        # 1. Fetch Price
+        data = api.fetch_latest_price()
+        current_price = data["price_idr_gram"]
+        date_str = data["date"]
+
+        # 2. Load History for Analysis
+        history = storage.load_history()
+
+        # 3. Analyze for Dips
+        is_dip, reason = monitor.analyze_price(current_price, history)
+
+        # 4. Save Today's Price
+        storage.save_price(current_price, date_str)
+
+        # 5. Determine Notification Type
+        if monitor.is_within_buy_window(current_date) and is_dip:
+            await notifier.send_gold_buy_alert(current_price, reason)
+        else:
+            # Calculate change for standard update
+            change = 0
+            if history:
+                prev_price = history[-1].get("price_idr", 0)
+                if prev_price > 0:
+                    change = ((current_price - prev_price) / prev_price) * 100
+
+            await notifier.send_gold_update(current_price, date_str, change)
+
+    except Exception as e:
+        logger.error(f"Gold Price Check failed: {e}")
 
 
 async def main():
@@ -107,11 +151,20 @@ async def main():
         "Market Scheduler is active for WIB hours."
     )
 
-    # 6. Manual Smoke Test (Full Session Verification)
-    logger.info("Running manual smoke tests for all sessions...")
-    await trigger_market_update(notifier, "Pagi (Smoke Test)")
-    await trigger_market_update(notifier, "Siang (Smoke Test)")
-    await trigger_market_update(notifier, "Sore (Smoke Test)")
+    # 6. Add Gold Monitoring Job (Daily 08:30 WIB)
+    # Using environment variable for API Key
+    GOLD_API_KEY = os.getenv("METALPRICE_API_KEY")
+    gold_api = GoldAPI(api_key=GOLD_API_KEY)
+    gold_storage = GoldStorage()
+    gold_monitor = GoldMonitor()
+
+    scheduler.add_market_status_job(
+        trigger_gold_check,
+        hour=8,
+        minute=30,
+        session_name="GoldUpdate",
+        args=(gold_api, gold_storage, gold_monitor, notifier),
+    )
 
     # 7. Continuous Execution Loop
     try:
