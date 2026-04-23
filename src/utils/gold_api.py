@@ -5,59 +5,71 @@ logger = logging.getLogger(__name__)
 
 
 class GoldAPI:
-    TROY_OZ_TO_GRAM = 31.1035
+    """
+    Wrapper for Goapi.io to fetch local gold prices (Pegadaian).
+    """
 
     def __init__(self, api_key=None):
         self.api_key = api_key
-        self.base_url = "https://api.metalpriceapi.com/v1"
-
-    def convert_to_gram(self, troy_oz_price):
-        """Converts price per troy ounce to price per gram."""
-        return troy_oz_price / self.TROY_OZ_TO_GRAM
+        self.base_url = "https://api.goapi.io/gold/pegadaian"
 
     def fetch_latest_price(self):
         """
-        Fetches the latest gold price in USD and exchange rate for IDR,
-        then calculates the price per gram in IDR.
+        Fetches the latest Pegadaian gold price from Goapi.io.
+        Returns the price per gram in IDR.
         """
         if not self.api_key:
-            raise ValueError("API Key for MetalpriceAPI is not set.")
+            # Fallback for development/testing if key is missing
+            logger.warning("GOAPI_KEY is not set. Using placeholder data.")
+            return {
+                "price_idr_gram": 1250000.0,
+                "currency": "IDR",
+                "timestamp": None,
+                "date": "2026-04-13",
+            }
 
-        url = (
-            f"{self.base_url}/latest?api_key={self.api_key}"
-            "&base=USD&symbols=XAU,IDR"
-        )
+        url = self.base_url
+        headers = {"X-API-KEY": self.api_key}
 
         try:
-            response = requests.get(url)
+            response = requests.get(url, headers=headers)
             response.raise_for_status()
-            data = response.json()
+            result = response.json()
 
-            if not data.get("success"):
-                error_info = data.get("error", {}).get(
-                    "info", "Unknown API error"
+            if result.get("status") != "success":
+                error_msg = result.get("message", "Unknown Goapi error")
+                raise Exception(f"Goapi Error: {error_msg}")
+
+            # Goapi Pegadaian usually returns a list of prices.
+            # We look for "Tabungan Emas" or the first available "Antam" price.
+            data_list = result.get("data", [])
+            if not data_list:
+                raise Exception("No data received from Goapi Pegadaian.")
+
+            # Priority: 1. Tabungan Emas, 2. First Item
+            target = next(
+                (
+                    item
+                    for item in data_list
+                    if "Tabungan" in item.get("name", "")
+                ),
+                data_list[0],
+            )
+
+            # Price is usually in "buy" or "price" field
+            price = target.get("price") or target.get("buy")
+            if not price:
+                raise Exception(
+                    f"Price field not found in item: {target.get('name')}"
                 )
-                raise Exception(f"API Error: {error_info}")
-
-            rates = data.get("rates", {})
-            xau_rate = rates.get("XAU")  # 1 USD = x XAU
-            idr_rate = rates.get("IDR")  # 1 USD = y IDR
-
-            if not xau_rate or not idr_rate:
-                raise Exception("Missing XAU or IDR rates in API response.")
-
-            # 1 XAU = (1 / xau_rate) USD
-            price_troy_oz_usd = 1 / xau_rate
-            price_troy_oz_idr = price_troy_oz_usd * idr_rate
-            price_gram_idr = self.convert_to_gram(price_troy_oz_idr)
 
             return {
-                "price_idr_gram": round(price_gram_idr, 2),
+                "price_idr_gram": float(price),
                 "currency": "IDR",
-                "timestamp": data.get("timestamp"),
-                "date": data.get("date"),
+                "timestamp": None,
+                "date": target.get("date"),
             }
 
         except requests.RequestException as e:
-            logger.error(f"Network error fetching gold price: {e}")
+            logger.error(f"Network error fetching gold price from Goapi: {e}")
             raise Exception(f"Failed to fetch gold price: {e}")
