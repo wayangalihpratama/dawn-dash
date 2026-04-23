@@ -13,7 +13,9 @@ class MarketScheduler:
 
     def add_signal_job(self, func, args=None, hour=15, minute=50):
         """Adds a job to scan for BSJP signals."""
-        trigger = CronTrigger(hour=hour, minute=minute, timezone=self.tz)
+        trigger = CronTrigger(
+            hour=hour, minute=minute, day_of_week="mon-fri", timezone=self.tz
+        )
         self.scheduler.add_job(
             func, trigger, args=args, name="BSJP_Signal_Scan"
         )
@@ -24,23 +26,33 @@ class MarketScheduler:
 
     def add_journal_job(self, func, args=None, hour=17, minute=00):
         """Adds a job to generate the daily learning journal."""
-        trigger = CronTrigger(hour=hour, minute=minute, timezone=self.tz)
+        trigger = CronTrigger(
+            hour=hour, minute=minute, day_of_week="mon-fri", timezone=self.tz
+        )
         self.scheduler.add_job(func, trigger, args=args, name="Daily_Journal")
         logger.info(
-            f"Scheduled 'Daily Journal' at {hour:02d}:{minute:02d} {self.tz}"
+            f"Scheduled 'Daily Journal' at {hour:02d}:{minute:02d} "
+            f"{self.tz}"
         )
 
     def add_exit_job(self, func, args=None, hour=9, minute=00):
         """Adds a job to notify about automated exits at market open."""
-        trigger = CronTrigger(hour=hour, minute=minute, timezone=self.tz)
+        trigger = CronTrigger(
+            hour=hour, minute=minute, day_of_week="mon-fri", timezone=self.tz
+        )
         self.scheduler.add_job(func, trigger, args=args, name="Automated_Exit")
         logger.info(
-            f"Scheduled 'Automated Exit' at {hour:02d}:{minute:02d} {self.tz}"
+            f"Scheduled 'Automated Exit' at {hour:02d}:{minute:02d} "
+            f"{self.tz}"
         )
 
-    def add_market_status_job(self, func, hour, minute, session_name, args=None):
+    def add_market_status_job(
+        self, func, hour, minute, session_name, args=None
+    ):
         """Adds a generic market status/price check job."""
-        trigger = CronTrigger(hour=hour, minute=minute, timezone=self.tz)
+        trigger = CronTrigger(
+            hour=hour, minute=minute, day_of_week="mon-fri", timezone=self.tz
+        )
         job_name = f"PriceCheck_{session_name}"
         self.scheduler.add_job(func, trigger, args=args, name=job_name)
         logger.info(

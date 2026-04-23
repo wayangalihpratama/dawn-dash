@@ -1,15 +1,17 @@
 import os
 import logging
 import asyncio
+from datetime import datetime
 from dotenv import load_dotenv
 
 from src.engine.signal_filter import SignalScanner
 from src.scheduler.service import MarketScheduler
 from src.notifier.telegram import TelegramNotifier
-from src.utils.mock_data import get_mock_stock_data
+from src.utils.stock_api import StockAPI
 from src.utils.gold_api import GoldAPI
 from src.utils.gold_storage import GoldStorage
 from src.engine.gold_monitor import GoldMonitor
+from src.utils.market_calendar import MarketCalendar
 
 # --- Configuration ---
 load_dotenv()
@@ -25,13 +27,16 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-async def trigger_bsjp_scan(scanner, notifier):
+async def trigger_bsjp_scan(scanner, stock_api, notifier):
     """Execution logic for the 15:50 WIB BSJP scan."""
+    if not MarketCalendar.is_market_open():
+        logger.info("Market is closed (Holiday). Skipping BSJP scan.")
+        return
+
     logger.info("Triggered BSJP Signal Scan...")
 
-    # In a real scenario, this would fetch from an API.
-    # For MVP, we use mock data.
-    data = get_mock_stock_data()
+    # Fetch real-time data from Stockbit/IDX via Goapi
+    data = stock_api.fetch_market_data()
 
     signals = scanner.filter_bsjp(data)
 
@@ -44,12 +49,18 @@ async def trigger_bsjp_scan(scanner, notifier):
         await notifier.send_bsjp_signal(signal)
 
 
-async def trigger_market_update(notifier, session_title):
+async def trigger_market_update(stock_api, notifier, session_title):
     """Execution logic for scheduled market updates."""
+    if not MarketCalendar.is_market_open():
+        logger.info(
+            f"Market is closed (Holiday). Skipping update: {session_title}"
+        )
+        return
+
     logger.info(f"Triggering Market Update: {session_title}")
 
-    # Use mock data to simulate market movers (Top 5)
-    all_data = get_mock_stock_data()
+    # Use real data to simulate market movers (Top 5)
+    all_data = stock_api.fetch_market_data()
     sorted_data = sorted(
         all_data, key=lambda x: x["price_change_pct"], reverse=True
     )
@@ -62,6 +73,10 @@ async def trigger_gold_check(
     api, storage, monitor, notifier, current_date=None
 ):
     """Logic for daily gold price monitoring and dip alerts."""
+    if not MarketCalendar.is_market_open():
+        logger.info("Market is closed (Holiday). Skipping Gold check.")
+        return
+
     if current_date is None:
         current_date = datetime.now()
 
@@ -114,7 +129,12 @@ async def main():
     scheduler = MarketScheduler()
 
     # 2. Add Market Jobs (Passing Functions Directly - No Lambdas)
-    scheduler.add_signal_job(trigger_bsjp_scan, args=(scanner, notifier))
+    GOAPI_KEY = os.getenv("GOAPI_KEY")
+    stock_api = StockAPI(api_key=GOAPI_KEY)
+
+    scheduler.add_signal_job(
+        trigger_bsjp_scan, args=(scanner, stock_api, notifier)
+    )
 
     # 3. Add Market Status Jobs (Morning, Afternoon, Evening)
     scheduler.add_market_status_job(
@@ -122,21 +142,21 @@ async def main():
         hour=9,
         minute=0,
         session_name="Morning",
-        args=(notifier, "Pagi"),
+        args=(stock_api, notifier, "Pagi"),
     )
     scheduler.add_market_status_job(
         trigger_market_update,
         hour=12,
         minute=0,
         session_name="Afternoon",
-        args=(notifier, "Siang"),
+        args=(stock_api, notifier, "Siang"),
     )
     scheduler.add_market_status_job(
         trigger_market_update,
         hour=15,
         minute=50,
         session_name="Evening",
-        args=(notifier, "Sore"),
+        args=(stock_api, notifier, "Sore"),
     )
 
     # 4. Start Scheduler
@@ -153,8 +173,7 @@ async def main():
 
     # 6. Add Gold Monitoring Job (Daily 08:30 WIB)
     # Using environment variable for API Key
-    GOLD_API_KEY = os.getenv("METALPRICE_API_KEY")
-    gold_api = GoldAPI(api_key=GOLD_API_KEY)
+    gold_api = GoldAPI(api_key=GOAPI_KEY)
     gold_storage = GoldStorage()
     gold_monitor = GoldMonitor()
 
