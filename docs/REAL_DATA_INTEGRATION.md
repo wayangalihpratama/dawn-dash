@@ -9,18 +9,24 @@ Transition the Dawn Dash bot from mock/static data to live market data using Goa
 - **Provider**: Goapi.io
 - **Endpoint**: `/stock/idx/trending`
 - **Authentication**: `X-API-KEY` header.
-- **Mapping**: Data is mapped to `symbol`, `price_change_pct`, and `volume`. 
+- **Mapping**: Data is mapped to `symbol`, `price_change_pct`, and `volume`.
 - **Fallbacks**: If a stock is missing 20-day average volume from the API, it defaults to a baseline (1,000,000) to ensure the scanner logic still functions.
 
-### 2.2. Market Holiday Logic
+### 2.2. Gold Price Integration (Pegadaian)
+- **Provider**: Pegadaian (Official Internal API)
+- **Endpoint**: `https://sahabat.pegadaian.co.id/gold/prices/savings`
+- **Logic**: Fetches the "Tabungan Emas" daily rate. We prioritize the `buy` price for signal generation.
+- **Fallbacks**: Uses the last cached successful price if the API fails.
+
+### 2.3. Market Holiday Logic
 - **Module**: `MarketCalendar`
 - **Behavior**: Proactively detects weekends and 2026 IDX holidays.
 - **Impact**: All scheduled scans and updates are skipped when the market is closed, reducing API consumption and avoiding flat signals.
 
 ## 3. Testing Status
-- **Unit Tests**: `tests/test_stock_api.py` and `tests/test_market_calendar.py`.
-- **Manual Verification**: Verified via `scratch/run_analysis.py` against live Goapi.io responses.
+- **Unit Tests**: `tests/test_stock_api.py`, `tests/test_market_calendar.py`, and `tests/test_pegadaian_api.py`.
+- **Manual Verification**: Verified via `scratch/run_analysis.py` and `scratch/test_gold.py`.
 
 ## 4. Known Limitations
-- **Gold API**: Currently uses placeholder data as the Goapi.io Pegadaian endpoint returned 404 during integration.
-- **Volume Accuracy**: The `trending` endpoint provides a snapshot; high-precision volume ratio analysis may require historical data endpoint integration in future iterations.
+- **API Availability**: Internal APIs may lack formal SLA; implementation includes robust error handling and user-agent spoofing to maintain connectivity.
+

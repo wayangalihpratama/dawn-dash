@@ -34,7 +34,7 @@ Dawn Dash is a Python-based utility container designed to bridge Stockbit screen
 
 ### 3.4. Gold Price Module
 - **Engine**: `GoldMonitor` tracks price history and identifies "Buy the Dip" opportunities.
-- **API Wrapper**: Fetches local gold prices from **Pegadaian (Tring)** via Goapi.io/Scraper.
+- **API Wrapper**: `PegadaianAPI` fetches Tabungan Emas rates directly from `sahabat.pegadaian.co.id`.
 - **Persistence**: Daily prices stored in `data/gold_history.json`.
 
 ---
