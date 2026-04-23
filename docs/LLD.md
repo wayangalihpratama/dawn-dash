@@ -17,14 +17,15 @@ Dawn Dash is a Python-based utility container designed to bridge Stockbit screen
 ### 3.1. Scheduler Module
 - Uses `apscheduler` with `Asia/Jakarta` (WIB) timezone.
 - Triggers:
-    - 15:50 WIB: BSJP Screening (Buy)
-    - 17:00 WIB: Daily Journal Generation
-    - 09:00 WIB: Profit/Loss Notification
+    - 15:50 WIB: BSJP Screening (Buy) - Restricted to Mon-Fri/IDX Holidays.
+    - 17:00 WIB: Daily Journal Generation - Restricted to Mon-Fri.
+    - 09:00 WIB: Profit/Loss Notification - Restricted to Mon-Fri.
 
 ### 3.2. Signal Engine
 - Filters stock data using `SignalScanner`.
 - Logic: `Volume > 1.5x Avg`, `Price > +2%`, `Index in KOMPAS100`.
-- Data Source: Real-time IDX data via Goapi.io (Fallback: yfinance).
+- Data Source: Real-time IDX data via Goapi.io.
+- **Market Guard**: `MarketCalendar` utility prevents execution on weekends and public holidays.
 
 ### 3.3. Notification Module (Telegram)
 - Formats signals with HTML and Inline Buttons.
@@ -62,4 +63,4 @@ Dawn Dash is a Python-based utility container designed to bridge Stockbit screen
     - **Rebuild**: `./dc.sh up -d --build`
     - **Logs**: `./dc.sh logs -f`
     - **Shutdown**: `./dc.sh down`
-    - **Run Tests**: `./dc.sh run --rm bot python -m pytest tests/`
+    - **Run Tests**: `docker compose run --rm bot pytest`
