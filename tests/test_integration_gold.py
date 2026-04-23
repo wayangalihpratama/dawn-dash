@@ -1,8 +1,8 @@
 import unittest
 import asyncio
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import MagicMock, AsyncMock
 from datetime import datetime
-from src.utils.gold_api import GoldAPI
+from src.utils.pegadaian_api import PegadaianAPI
 from src.utils.gold_storage import GoldStorage
 from src.engine.gold_monitor import GoldMonitor
 from src.notifier.telegram import TelegramNotifier
@@ -10,12 +10,12 @@ from src.notifier.telegram import TelegramNotifier
 
 class TestIntegrationGold(unittest.TestCase):
     def setUp(self):
-        # We need to use AsyncMock for TelegramNotifier as its methods are async
+        # We need to use AsyncMock for TelegramNotifier as its async
         self.notifier = MagicMock(spec=TelegramNotifier)
         self.notifier.send_gold_update = AsyncMock()
         self.notifier.send_gold_buy_alert = AsyncMock()
 
-        self.api = MagicMock(spec=GoldAPI)
+        self.api = MagicMock(spec=PegadaianAPI)
         self.storage = MagicMock(spec=GoldStorage)
         self.monitor = GoldMonitor()
 
@@ -28,7 +28,7 @@ class TestIntegrationGold(unittest.TestCase):
             {"date": "2026-04-09", "price_idr": 1250000.0}
         ]
 
-        # Action: We'll call the trigger function (to be implemented in main.py)
+        # Action: We'll call the trigger function
         # For now, let's simulate the logic that will be in main.py
         from main import trigger_gold_check
 

@@ -8,7 +8,7 @@ from src.engine.signal_filter import SignalScanner
 from src.scheduler.service import MarketScheduler
 from src.notifier.telegram import TelegramNotifier
 from src.utils.stock_api import StockAPI
-from src.utils.gold_api import GoldAPI
+from src.utils.pegadaian_api import PegadaianAPI
 from src.utils.gold_storage import GoldStorage
 from src.engine.gold_monitor import GoldMonitor
 from src.utils.market_calendar import MarketCalendar
@@ -172,8 +172,7 @@ async def main():
     )
 
     # 6. Add Gold Monitoring Job (Daily 08:30 WIB)
-    # Using environment variable for API Key
-    gold_api = GoldAPI(api_key=GOAPI_KEY)
+    gold_api = PegadaianAPI()
     gold_storage = GoldStorage()
     gold_monitor = GoldMonitor()
 
